@@ -3,44 +3,163 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sliderr - Giriş Yap</title>
+  <title>Sliderr - Giriş Yap / Kayıt Ol</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #000; color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .auth-card { background: #121212; padding: 30px 24px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #222; }
-    .logo { font-size: 32px; font-weight: 900; background: linear-gradient(45deg, #ff007f, #7928ca); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 24px; }
-    input { width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: white; font-size: 14px; outline: none; }
+    body { background: #000; color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    
+    .auth-container { width: 100%; max-width: 380px; padding: 30px 20px; background: #111; border-radius: 16px; border: 1px solid #222; text-align: center; }
+    h1 { font-size: 32px; font-weight: 800; color: #ff007f; margin-bottom: 8px; letter-spacing: -1px; }
+    p { color: #888; font-size: 14px; margin-bottom: 24px; }
+    
+    .form-group { display: flex; flex-direction: column; gap: 12px; }
+    input { background: #1a1a1a; border: 1px solid #333; color: white; padding: 14px; border-radius: 8px; font-size: 14px; outline: none; }
     input:focus { border-color: #ff007f; }
-    button { width: 100%; padding: 14px; background: linear-gradient(45deg, #ff007f, #7928ca); border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 8px; }
+    
+    button { background: #ff007f; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .toggle-text { margin-top: 20px; font-size: 13px; color: #888; }
+    .toggle-btn { color: #ff007f; cursor: pointer; font-weight: bold; text-decoration: underline; }
+    .error-msg { color: #ff4757; font-size: 13px; margin-top: 10px; display: none; }
   </style>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
 </head>
 <body>
 
-  <div class="auth-card">
-    <div class="logo">Sliderr</div>
-    <input type="text" id="nameInput" placeholder="Ad Soyad">
-    <input type="text" id="usernameInput" placeholder="Kullanıcı Adı (@olmadan)">
-    <input type="text" id="avatarInput" placeholder="Profil Resmi URL (İsteğe bağlı)">
-    <button onclick="saveProfile()">Profil Oluştur ve Başla 🚀</button>
+  <div class="auth-container">
+    <h1>Sliderr</h1>
+    <p id="subTitle">Hesabına Giriş Yap</p>
+
+    <div class="form-group">
+      <input type="email" id="emailInput" placeholder="E-posta Adresi">
+      <input type="text" id="usernameInput" placeholder="Kullanıcı Adı (ör: @ahmet)" style="display: none;">
+      <input type="password" id="passwordInput" placeholder="Şifre (En az 6 karakter)">
+      
+      <button id="authBtn" onclick="handleAuth()">Giriş Yap</button>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="toggle-text">
+      <span id="toggleQuestion">Hesabın yok mu?</span>
+      <span class="toggle-btn" id="toggleBtn" onclick="toggleMode()">Kayıt Ol</span>
+    </div>
   </div>
 
   <script>
-    function saveProfile() {
-      const name = document.getElementById('nameInput').value.trim();
-      let username = document.getElementById('usernameInput').value.trim().toLowerCase();
-      const avatar = document.getElementById('avatarInput').value.trim() || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + username;
+    let isSignUp = false;
 
-      if (!name || !username) {
-        alert("Lütfen adını ve kullanıcı adını gir!");
+    function toggleMode() {
+      isSignUp = !isSignUp;
+      const usernameInput = document.getElementById('usernameInput');
+      const subTitle = document.getElementById('subTitle');
+      const authBtn = document.getElementById('authBtn');
+      const toggleQuestion = document.getElementById('toggleQuestion');
+      const toggleBtn = document.getElementById('toggleBtn');
+      const errorMsg = document.getElementById('errorMsg');
+
+      errorMsg.style.display = 'none';
+
+      if (isSignUp) {
+        usernameInput.style.display = 'block';
+        subTitle.innerText = "Yeni Hesap Oluştur";
+        authBtn.innerText = "Kayıt Ol";
+        toggleQuestion.innerText = "Zaten hesabın var mı?";
+        toggleBtn.innerText = "Giriş Yap";
+      } else {
+        usernameInput.style.display = 'none';
+        subTitle.innerText = "Hesabına Giriş Yap";
+        authBtn.innerText = "Giriş Yap";
+        toggleQuestion.innerText = "Hesabın yok mu?";
+        toggleBtn.innerText = "Kayıt Ol";
+      }
+    }
+
+    async function handleAuth() {
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value.trim();
+      const usernameRaw = document.getElementById('usernameInput').value.trim();
+      const errorMsg = document.getElementById('errorMsg');
+      const authBtn = document.getElementById('authBtn');
+
+      errorMsg.style.display = 'none';
+
+      if (!email || !password) {
+        showError("Lütfen e-posta ve şifrenizi girin.");
         return;
       }
 
-      username = '@' + username.replace('@', '');
+      authBtn.disabled = true;
+      authBtn.innerText = "İşleniyor...";
 
-      const user = { name, username, avatar };
-      localStorage.setItem('sliderr_user', JSON.stringify(user));
+      try {
+        if (isSignUp) {
+          // KAYIT OLMA İŞLEMİ
+          if (!usernameRaw) {
+            showError("Lütfen bir kullanıcı adı girin.");
+            authBtn.disabled = false;
+            authBtn.innerText = "Kayıt Ol";
+            return;
+          }
 
-      window.location.href = "index.html";
+          const username = usernameRaw.startsWith('@') ? usernameRaw : `@${usernameRaw}`;
+
+          // Kullanıcı adı çakışma kontrolü
+          const userCheck = await db.collection("users").where("username", "==", username).get();
+          if (!userCheck.empty) {
+            showError("Bu kullanıcı adı zaten alınmış! Başka bir tane dene.");
+            authBtn.disabled = false;
+            authBtn.innerText = "Kayıt Ol";
+            return;
+          }
+
+          // Firebase Auth ile kullanıcı oluştur
+          const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+          const uid = userCredential.user.uid;
+          const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username)}`;
+
+          const userData = { uid, email, username, avatar, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+
+          // Veritabanına kaydet
+          await db.collection("users").doc(uid).set(userData);
+          localStorage.setItem('sliderr_user', JSON.stringify(userData));
+          window.location.href = "index.html";
+
+        } else {
+          // GİRİŞ YAPMA İŞLEMİ
+          const userCredential = await auth.signInWithEmailAndPassword(email, password);
+          const uid = userCredential.user.uid;
+
+          // Kullanıcı bilgilerini Firestore'dan çek
+          const userDoc = await db.collection("users").doc(uid).get();
+          if (userDoc.exists) {
+            localStorage.setItem('sliderr_user', JSON.stringify(userDoc.data()));
+            window.location.href = "index.html";
+          } else {
+            showError("Kullanıcı verisi bulunamadı.");
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        if (err.code === 'auth/email-already-in-use') showError("Bu e-posta adresi zaten kullanımda.");
+        else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') showError("E-posta veya şifre hatalı.");
+        else if (err.code === 'auth/weak-password') showError("Şifre en az 6 karakter olmalıdır.");
+        else showError("Bir hata oluştu: " + err.message);
+      } finally {
+        authBtn.disabled = false;
+        authBtn.innerText = isSignUp ? "Kayıt Ol" : "Giriş Yap";
+      }
+    }
+
+    function showError(msg) {
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.innerText = msg;
+      errorMsg.style.display = 'block';
     }
   </script>
 </body>
