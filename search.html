@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sliderr - Keşfet</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #000; color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 70px; }
+    
+    .search-container { width: 100%; max-width: 420px; padding: 15px; position: sticky; top: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 10; }
+    .search-input { width: 100%; background: #1a1a1a; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 25px; outline: none; font-size: 14px; }
+    
+    .video-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: 100%; max-width: 420px; }
+    .grid-item { position: relative; width: 100%; aspect-ratio: 9/16; background: #111; overflow: hidden; cursor: pointer; }
+    .grid-item video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .grid-author { position: absolute; bottom: 5px; left: 5px; font-size: 11px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; width: 100%; max-width: 420px; height: 60px;
+      background: rgba(0, 0, 0, 0.9); border-top: 1px solid #222;
+      display: flex; justify-content: space-around; align-items: center; z-index: 99;
+    }
+    .nav-item { color: #888; text-decoration: none; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .nav-item.active { color: white; font-weight: bold; }
+    .nav-icon { font-size: 18px; }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+
+  <div class="search-container">
+    <input type="text" class="search-input" id="searchInput" placeholder="Kullanıcı adı veya açıklama ara..." oninput="handleSearch()">
+  </div>
+
+  <div class="video-grid" id="exploreGrid"></div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span>Akış</a>
+    <a href="search.html" class="nav-item active"><span class="nav-icon">🔍</span>Keşfet</a>
+    <a href="upload.html" class="nav-item"><span class="nav-icon">➕</span>Yükle</a>
+    <a href="profile.html" class="nav-item"><span class="nav-icon">👤</span>Profil</a>
+  </nav>
+
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem('sliderr_user'));
+    if (!currentUser) window.location.href = "auth.html";
+
+    let allVideos = [];
+
+    // Tüm videoları baştan yükle ve önbelleğe al
+    db.collection("reels").orderBy("createdAt", "desc").get().then((snapshot) => {
+      snapshot.forEach(doc => {
+        allVideos.push({ id: doc.id, ...doc.data() });
+      });
+      renderVideos(allVideos);
+    });
+
+    function renderVideos(videos) {
+      const grid = document.getElementById('exploreGrid');
+      grid.innerHTML = "";
+
+      if (videos.length === 0) {
+        grid.innerHTML = '<div style="grid-column: span 3; text-align:center; padding: 40px; color:#666;">Sonuç bulunamadı.</div>';
+        return;
+      }
+
+      videos.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'grid-item';
+        div.innerHTML = `
+          <video src="${item.url}#t=0.1" preload="metadata"></video>
+          <div class="grid-author">@${item.username || 'anonim'}</div>
+        `;
+        div.onclick = () => window.location.href = `index.html?video=${item.id}`;
+        grid.appendChild(div);
+      });
+    }
+
+    function handleSearch() {
+      const term = document.getElementById('searchInput').value.toLowerCase().trim();
+      if (!term) {
+        renderVideos(allVideos);
+        return;
+      }
+
+      const filtered = allVideos.filter(v => 
+        (v.username && v.username.toLowerCase().includes(term)) ||
+        (v.desc && v.desc.toLowerCase().includes(term))
+      );
+      renderVideos(filtered);
+    }
+  </script>
+</body>
+</html>

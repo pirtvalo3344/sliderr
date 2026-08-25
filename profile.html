@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sliderr - Profil</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #000; color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 70px; }
+    
+    .profile-header { text-align: center; padding: 30px 20px 20px; width: 100%; max-width: 420px; border-bottom: 1px solid #222; }
+    .profile-avatar { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #ff007f; margin-bottom: 12px; object-fit: cover; }
+    .profile-name { font-size: 20px; font-weight: bold; }
+    .profile-username { font-size: 14px; color: #888; margin-top: 4px; }
+    .logout-btn { margin-top: 15px; background: #222; color: #ff4757; border: 1px solid #333; padding: 6px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+
+    .video-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: 100%; max-width: 420px; margin-top: 10px; }
+    .grid-item { position: relative; width: 100%; aspect-ratio: 9/16; background: #111; overflow: hidden; cursor: pointer; }
+    .grid-item video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; width: 100%; max-width: 420px; height: 60px;
+      background: rgba(0, 0, 0, 0.9); border-top: 1px solid #222;
+      display: flex; justify-content: space-around; align-items: center; z-index: 99;
+    }
+    .nav-item { color: #888; text-decoration: none; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .nav-item.active { color: white; font-weight: bold; }
+    .nav-icon { font-size: 20px; }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+
+  <div class="profile-header">
+    <img id="userAvatar" class="profile-avatar" src="" alt="Avatar">
+    <div id="userName" class="profile-name"></div>
+    <div id="userHandle" class="profile-username"></div>
+    <button id="logoutBtn" class="logout-btn" onclick="logout()">Çıkış Yap</button>
+  </div>
+
+  <div class="video-grid" id="userVideos"></div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span>Akış</a>
+    <a href="upload.html" class="nav-item"><span class="nav-icon">➕</span>Yükle</a>
+    <a href="profile.html" class="nav-item active"><span class="nav-icon">👤</span>Profil</a>
+  </nav>
+
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem('sliderr_user'));
+    if (!currentUser) window.location.href = "auth.html";
+
+    // URL'den hangi kullanıcının profili istendiğini kontrol et
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetUsername = urlParams.get('u') || currentUser.username;
+
+    // Eğer kendi profilinde değilse Çıkış Yap butonunu gizle
+    if (targetUsername !== currentUser.username) {
+      document.getElementById('logoutBtn').style.display = 'none';
+    }
+
+    // Profil sahibinin videolarını Firestore'dan sorgula
+    db.collection("reels").where("username", "==", targetUsername).get().then((querySnapshot) => {
+      const grid = document.getElementById('userVideos');
+
+      if (querySnapshot.empty) {
+        document.getElementById('userName').innerText = targetUsername;
+        document.getElementById('userHandle').innerText = targetUsername;
+        document.getElementById('userAvatar').src = 'https://api.dicebear.com/7.x/bottts/svg?seed=' + targetUsername;
+        grid.innerHTML = '<div style="grid-column: span 3; text-align:center; padding: 40px; color:#666;">Henüz video yok.</div>';
+        return;
+      }
+
+      let profileSet = false;
+
+      querySnapshot.forEach((doc) => {
+        const item = doc.data();
+
+        // Profil başlık bilgilerini ilk bulunan videodan çek
+        if (!profileSet) {
+          document.getElementById('userAvatar').src = item.avatar || ('https://api.dicebear.com/7.x/bottts/svg?seed=' + targetUsername);
+          document.getElementById('userName').innerText = item.username || targetUsername;
+          document.getElementById('userHandle').innerText = item.username || targetUsername;
+          profileSet = true;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'grid-item';
+        div.innerHTML = `<video src="${item.url}#t=0.1" preload="metadata"></video>`;
+        
+        // Videoya tıklayınca Akış'ta o videoya yönlendir
+        div.addEventListener('click', () => {
+          window.location.href = `index.html?video=${doc.id}`;
+        });
+
+        grid.appendChild(div);
+      });
+    });
+
+    function logout() {
+      localStorage.removeItem('sliderr_user');
+      window.location.href = "auth.html";
+    }
+  </script>
+</body>
+</html>

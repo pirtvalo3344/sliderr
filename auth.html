@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sliderr - Giriş Yap</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #000; color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .auth-card { background: #121212; padding: 30px 24px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #222; }
+    .logo { font-size: 32px; font-weight: 900; background: linear-gradient(45deg, #ff007f, #7928ca); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 24px; }
+    input { width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: white; font-size: 14px; outline: none; }
+    input:focus { border-color: #ff007f; }
+    button { width: 100%; padding: 14px; background: linear-gradient(45deg, #ff007f, #7928ca); border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <div class="auth-card">
+    <div class="logo">Sliderr</div>
+    <input type="text" id="nameInput" placeholder="Ad Soyad">
+    <input type="text" id="usernameInput" placeholder="Kullanıcı Adı (@olmadan)">
+    <input type="text" id="avatarInput" placeholder="Profil Resmi URL (İsteğe bağlı)">
+    <button onclick="saveProfile()">Profil Oluştur ve Başla 🚀</button>
+  </div>
+
+  <script>
+    function saveProfile() {
+      const name = document.getElementById('nameInput').value.trim();
+      let username = document.getElementById('usernameInput').value.trim().toLowerCase();
+      const avatar = document.getElementById('avatarInput').value.trim() || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + username;
+
+      if (!name || !username) {
+        alert("Lütfen adını ve kullanıcı adını gir!");
+        return;
+      }
+
+      username = '@' + username.replace('@', '');
+
+      const user = { name, username, avatar };
+      localStorage.setItem('sliderr_user', JSON.stringify(user));
+
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
