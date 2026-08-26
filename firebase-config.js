@@ -9,5 +9,10 @@ const firebaseConfig = {
 };
 
 // Firebase'i Başlat
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+// Global olarak window nesnesine ekliyoruz (Her yerden erişileabilsin diye)
+window.db = firebase.firestore();
+window.auth = firebase.auth();
