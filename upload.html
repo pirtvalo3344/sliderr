@@ -73,7 +73,7 @@
 
     .status-msg { margin-top: 15px; font-size: 13px; color: #888; }
 
-    /* Alt Navigasyon Barı */
+    /* Standart Alt Navigasyon Barı */
     .navbar { 
       position: fixed; 
       bottom: 0; 
@@ -100,7 +100,7 @@
     .nav-icon { font-size: 20px; }
   </style>
 
-  <!-- Firebase SDK Yüklemeleri -->
+  <!-- Firebase SDK Kütüphaneleri -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -131,7 +131,6 @@
   </nav>
 
   <script>
-    // Kullanıcı Oturum Kontrolü
     const currentUser = JSON.parse(localStorage.getItem('sliderr_user'));
     if (!currentUser) {
       window.location.href = "auth.html";
@@ -139,7 +138,6 @@
 
     let selectedFile = null;
 
-    // Dosya Seçim İşlemi
     function handleFileSelect(e) {
       selectedFile = e.target.files[0];
       if (selectedFile) {
@@ -147,7 +145,6 @@
       }
     }
 
-    // Cloudinary & Firebase Yükleme Fonksiyonu
     async function uploadVideo() {
       const btn = document.getElementById('uploadBtn');
       const statusMsg = document.getElementById('statusMsg');
@@ -162,13 +159,13 @@
       btn.innerText = "Yükleniyor...";
       statusMsg.innerText = "Video Cloudinary'ye aktarılıyor, lütfen bekleyin...";
 
-      // Cloudinary Yükleme Formu
       const formData = new FormData();
       formData.append("file", selectedFile);
-      formData.append("upload_preset", "sliderr_reels"); // Cloudinary'deki Unsigned Preset adın
+      // Yeni sıfır Unsigned preset ismin:
+      formData.append("upload_preset", "sliderr_v2"); 
 
       try {
-        // 1. Cloudinary'ye Yükleme İsteği (Güncellenmiş Cloud Name: v8lpa3zs)
+        // Cloud Name: v8lpa3zs
         const res = await fetch("https://api.cloudinary.com/v1_1/v8lpa3zs/video/upload", {
           method: "POST",
           body: formData
@@ -176,15 +173,13 @@
 
         const data = await res.json();
 
-        // 401 Hata Kontrolü
         if (res.status === 401) {
-          throw new Error("Cloudinary yetkilendirme hatası (401). Lütfen Cloudinary panelinde preset ayarınızın 'Unsigned' olduğundan emin olun.");
+          throw new Error("Cloudinary yetkilendirme hatası (401). Preset adının 'sliderr_v2' ve Unsigned olduğundan emin olun.");
         }
 
         if (data.secure_url) {
           statusMsg.innerText = "Video yüklendi! Veritabanına kaydediliyor...";
 
-          // 2. Firebase Firestore'a Kaydetme
           await db.collection("reels").add({
             videoUrl: data.secure_url,
             caption: caption,
@@ -195,7 +190,6 @@
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
 
-          // Başarılı Yönlendirme
           window.location.href = "index.html";
         } else {
           throw new Error(data.error ? data.error.message : "Video URL alınamadı.");
