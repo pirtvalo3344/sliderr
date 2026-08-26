@@ -3,82 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sliderr</title>
+  <title>Sliderr - Akış</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background-color: #000; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+    body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
 
-    .app-container {
-      width: 100%; max-width: 420px; height: 100vh; background: #000;
-      position: relative; overflow-y: scroll; scroll-snap-type: y mandatory;
+    /* Ana Akış Konteyneri */
+    .reels-container {
+      width: 100vw;
+      height: calc(100vh - 60px);
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
       scrollbar-width: none;
     }
-    .app-container::-webkit-scrollbar { display: none; }
+    .reels-container::-webkit-scrollbar { display: none; }
 
-    .reel-card {
-      width: 100%; height: 100vh; scroll-snap-align: start;
-      position: relative; display: flex; justify-content: center; align-items: center; background: #000;
+    /* Video Kartı */
+    .reel {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Sol Üst Ses Butonu */
+    .sound-toggle-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 20;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       cursor: pointer;
+      font-size: 18px;
+      transition: transform 0.2s, background 0.2s;
     }
-    video { width: 100%; height: 100%; object-fit: cover; }
+    .sound-toggle-btn:hover {
+      transform: scale(1.1);
+      background: rgba(0, 0, 0, 0.8);
+    }
 
-    /* Sağ Buton Paneli */
-    .actions {
-      position: absolute; right: 15px; bottom: 100px;
-      display: flex; flex-direction: column; gap: 16px; align-items: center; z-index: 10;
-    }
-    .action-group { display: flex; flex-direction: column; align-items: center; }
-    .action-btn {
-      background: rgba(0, 0, 0, 0.4); border: none; color: white;
-      font-size: 22px; width: 48px; height: 48px; border-radius: 50%;
-      cursor: pointer; backdrop-filter: blur(5px);
-      display: flex; justify-content: center; align-items: center;
-      transition: transform 0.1s ease;
-    }
-    .action-btn:active { transform: scale(0.9); }
-    .action-btn.liked { color: #ff007f; }
-    .action-btn.delete-btn { background: rgba(255, 71, 87, 0.3); }
-    .action-count { color: white; font-size: 12px; margin-top: 4px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
-
-    /* Sol Bilgi Paneli */
-    .video-info {
-      position: absolute; left: 15px; bottom: 90px; color: white; z-index: 10;
+    /* Video Üstü Bilgiler */
+    .reel-overlay {
+      position: absolute;
+      bottom: 20px;
+      left: 15px;
+      right: 70px;
+      z-index: 10;
       text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-      display: flex; align-items: center; gap: 10px; max-width: 75%;
     }
-    .profile-link { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; cursor: pointer; }
-    .user-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #ff007f; object-fit: cover; }
-    .username { font-weight: bold; font-size: 15px; }
-    .description { font-size: 13px; opacity: 0.9; margin-top: 4px; word-break: break-word; }
+    .author-info { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .author-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #ff007f; }
+    .author-name { font-weight: bold; font-size: 15px; }
+    .video-caption { font-size: 14px; color: #ddd; line-height: 1.3; }
 
-    /* Alt Navigasyon */
-    .bottom-nav {
-      position: fixed; bottom: 0; width: 100%; max-width: 420px; height: 60px;
-      background: rgba(0, 0, 0, 0.9); border-top: 1px solid #222;
-      display: flex; justify-content: space-around; align-items: center; z-index: 99;
+    /* Sağ Eylem Butonları (Beğeni / Yorum) */
+    .actions-sidebar {
+      position: absolute;
+      right: 15px;
+      bottom: 30px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
     }
-    .nav-item { color: #888; text-decoration: none; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .nav-item.active { color: white; font-weight: bold; }
-    .nav-icon { font-size: 18px; }
+    .action-btn {
+      background: none;
+      border: none;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      font-size: 24px;
+    }
+    .action-btn span { font-size: 12px; font-weight: 600; }
+    .liked { color: #ff007f; }
 
-    /* Yorum Modalı */
-    .comments-modal {
-      position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%);
-      width: 100%; max-width: 420px; height: 65vh; background: #121212;
-      border-radius: 20px 20px 0 0; z-index: 100; transition: bottom 0.3s ease;
-      display: flex; flex-direction: column; border-top: 1px solid #333;
+    /* Alt Navigasyon Barı */
+    .navbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(0, 0, 0, 0.95);
+      border-top: 1px solid #222;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
     }
-    .comments-modal.active { bottom: 0; }
-    .comments-header { padding: 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-    .close-btn { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; }
-    .comments-list { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
-    .comment-item { display: flex; gap: 10px; font-size: 13px; }
-    .comment-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
-    .comment-user { font-weight: bold; margin-bottom: 2px; }
-    .comment-text { color: #ddd; }
-    .comment-input-area { padding: 12px; border-top: 1px solid #222; display: flex; gap: 10px; background: #000; }
-    .comment-input-area input { flex: 1; background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px 14px; border-radius: 20px; outline: none; font-size: 14px; }
-    .comment-input-area button { background: #ff007f; color: white; border: none; padding: 0 16px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+    .nav-item {
+      color: #888;
+      text-decoration: none;
+      font-size: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 11px;
+      gap: 3px;
+    }
+    .nav-item.active { color: #ff007f; font-weight: bold; }
+    .nav-icon { font-size: 20px; }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -88,205 +136,159 @@
 </head>
 <body>
 
-  <div class="app-container" id="reelsContainer">
-    <div style="color:white; text-align:center; margin-top:50vh;">Sliderr Yükleniyor...</div>
-  </div>
+  <!-- Sol Üst Ses Aç/Kapat Butonu -->
+  <button class="sound-toggle-btn" id="soundToggleBtn" onclick="toggleGlobalSound()">🔇</button>
 
-  <div class="comments-modal" id="commentsModal">
-    <div class="comments-header">
-      <span>Yorumlar</span>
-      <button class="close-btn" onclick="closeComments()">✕</button>
-    </div>
-    <div class="comments-list" id="commentsList"></div>
-    <div class="comment-input-area">
-      <input type="text" id="commentInput" placeholder="Yorum ekle...">
-      <button onclick="submitComment()">Gönder</button>
-    </div>
-  </div>
+  <!-- Akış Kutusu -->
+  <div class="reels-container" id="reelsContainer"></div>
 
-  <nav class="bottom-nav">
-    <a href="index.html" class="nav-item active"><span class="nav-icon">🏠</span>Akış</a>
-    <a href="search.html" class="nav-item"><span class="nav-icon">🔍</span>Keşfet</a>
-    <a href="upload.html" class="nav-item"><span class="nav-icon">➕</span>Yükle</a>
-    <a href="profile.html" class="nav-item"><span class="nav-icon">👤</span>Profil</a>
+  <!-- Alt Navigasyon Barı -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-item active"><span class="nav-icon">🏠</span><span>Akış</span></a>
+    <a href="search.html" class="nav-item"><span class="nav-icon">🔍</span><span>Keşfet</span></a>
+    <a href="upload.html" class="nav-item"><span class="nav-icon">➕</span><span>Yükle</span></a>
+    <a href="profile.html" class="nav-item"><span class="nav-icon">👤</span><span>Profil</span></a>
   </nav>
 
   <script>
-    const currentUser = JSON.parse(localStorage.getItem('sliderr_user'));
-    if (!currentUser) window.location.href = "auth.html";
+    let currentUser = JSON.parse(localStorage.getItem('sliderr_user'));
+    let isGlobalMuted = true; // Varsayılan olarak sessiz (otomatik oynatma için)
+    let currentReelIndex = 0;
+    let reelsData = [];
 
-    const container = document.getElementById('reelsContainer');
-    const urlParams = new URLSearchParams(window.location.search);
-    const targetVideoId = urlParams.get('video');
-    let currentOpenVideoId = null;
+    // Giriş kontrolü
+    if (!currentUser) {
+      window.location.href = "auth.html";
+    }
 
-    db.collection("reels").orderBy("createdAt", "desc").onSnapshot((querySnapshot) => {
+    // Videoları Yükle
+    async function loadReels() {
+      const container = document.getElementById('reelsContainer');
+      const snapshot = await db.collection("reels").orderBy("createdAt", "desc").get();
+      
       container.innerHTML = "";
+      reelsData = [];
 
-      if (querySnapshot.empty) {
-        container.innerHTML = '<div style="color:white; text-align:center; margin-top:50vh;">Henüz video yok! İlk videoyu sen yükle.</div>';
+      if (snapshot.empty) {
+        container.innerHTML = "<div style='display:flex; justify-content:center; align-items:center; height:100%; color:#666;'>Henüz video yok. İlk videoyu sen yükle!</div>";
         return;
       }
 
-      let targetCardElement = null;
+      snapshot.forEach(doc => {
+        const reel = { id: doc.id, ...doc.data() };
+        reelsData.push(reel);
+        const isLiked = reel.likes && reel.likes.includes(currentUser.uid);
 
-      querySnapshot.forEach((doc) => {
-        const item = doc.data();
-        const likesList = item.likes || [];
-        const isLiked = likesList.includes(currentUser.username);
-        const isMyVideo = item.username === currentUser.username;
-        
-        const card = document.createElement('div');
-        card.className = 'reel-card';
-        card.dataset.id = doc.id;
-        
-        card.innerHTML = `
-          <video loop playsinline muted src="${item.url}"></video>
-          <div class="video-info">
-            <a href="profile.html?u=${encodeURIComponent(item.username || '')}" class="profile-link">
-              <img src="${item.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=guest'}" class="user-avatar">
-              <div>
-                <div class="username">${item.username || '@anonim'}</div>
-                <div class="description">${item.desc || ''}</div>
-              </div>
-            </a>
+        const reelEl = document.createElement('div');
+        reelEl.className = 'reel';
+        reelEl.innerHTML = `
+          <video src="${reel.videoUrl}" loop muted playsinline onclick="togglePlay(this)"></video>
+          
+          <div class="reel-overlay">
+            <div class="author-info">
+              <img src="${reel.authorAvatar}" class="author-avatar">
+              <span class="author-name">${reel.authorName}</span>
+            </div>
+            <div class="video-caption">${reel.caption || ''}</div>
           </div>
-          <div class="actions">
-            <div class="action-group">
-              <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(event, '${doc.id}', ${isLiked})">
-                ${isLiked ? '❤️' : '🤍'}
-              </button>
-              <span class="action-count">${likesList.length}</span>
-            </div>
-            <div class="action-group">
-              <button class="action-btn" onclick="openComments(event, '${doc.id}')">💬</button>
-              <span class="action-count" id="comment-count-${doc.id}">0</span>
-            </div>
-            ${isMyVideo ? `
-              <div class="action-group">
-                <button class="action-btn delete-btn" onclick="deleteVideo(event, '${doc.id}')">🗑️</button>
-              </div>
-            ` : ''}
+
+          <div class="actions-sidebar">
+            <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${reel.id}', this)">
+              ❤️ <span class="like-count">${reel.likes ? reel.likes.length : 0}</span>
+            </button>
           </div>
         `;
-
-        const video = card.querySelector('video');
-        card.addEventListener('click', (e) => {
-          if (e.target.closest('.profile-link') || e.target.closest('.actions')) return;
-          video.muted = false;
-          if (video.paused) video.play();
-          else video.pause();
-        });
-
-        container.appendChild(card);
-        loadCommentCount(doc.id);
-
-        if (doc.id === targetVideoId) targetCardElement = card;
+        container.appendChild(reelEl);
       });
 
-      setupObserver();
-
-      if (targetCardElement) {
-        setTimeout(() => targetCardElement.scrollIntoView({ behavior: 'smooth' }), 300);
-      }
-    });
-
-    async function deleteVideo(e, videoId) {
-      e.stopPropagation();
-      if (confirm("Bu videoyu silmek istediğine emin misin?")) {
-        await db.collection("reels").doc(videoId).delete();
-      }
+      setupScrollAndVideoObserver();
     }
 
-    function toggleLike(e, videoId, isLiked) {
-      e.stopPropagation();
-      const videoRef = db.collection("reels").doc(videoId);
-      if (isLiked) {
-        videoRef.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUser.username) });
-      } else {
-        videoRef.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.username) });
-      }
-    }
-
-    function openComments(e, videoId) {
-      e.stopPropagation();
-      currentOpenVideoId = videoId;
-      document.getElementById('commentsModal').classList.add('active');
-      loadComments(videoId);
-    }
-
-    function closeComments() {
-      document.getElementById('commentsModal').classList.remove('active');
-      currentOpenVideoId = null;
-    }
-
-    function loadComments(videoId) {
-      const list = document.getElementById('commentsList');
-      list.innerHTML = '<div style="color:#666; text-align:center;">Yorumlar yükleniyor...</div>';
-
-      db.collection("reels").doc(videoId).collection("comments").orderBy("createdAt", "asc")
-        .onSnapshot((snapshot) => {
-          list.innerHTML = "";
-          if (snapshot.empty) {
-            list.innerHTML = '<div style="color:#666; text-align:center;">İlk yorumu sen yaz!</div>';
-            return;
-          }
-          snapshot.forEach((doc) => {
-            const c = doc.data();
-            const div = document.createElement('div');
-            div.className = 'comment-item';
-            div.innerHTML = `
-              <img src="${c.avatar}" class="comment-avatar">
-              <div>
-                <div class="comment-user">${c.username}</div>
-                <div class="comment-text">${c.text}</div>
-              </div>
-            `;
-            list.appendChild(div);
-          });
-          list.scrollTop = list.scrollHeight;
-        });
-    }
-
-    function loadCommentCount(videoId) {
-      db.collection("reels").doc(videoId).collection("comments").onSnapshot((snapshot) => {
-        const countSpan = document.getElementById(`comment-count-${videoId}`);
-        if (countSpan) countSpan.innerText = snapshot.size;
-      });
-    }
-
-    async function submitComment() {
-      const input = document.getElementById('commentInput');
-      const text = input.value.trim();
-      if (!text || !currentOpenVideoId) return;
-
-      input.value = "";
-      await db.collection("reels").doc(currentOpenVideoId).collection("comments").add({
-        username: currentUser.username,
-        avatar: currentUser.avatar,
-        text: text,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-
-    function setupObserver() {
+    // Video Oynatma / Durdurma & Scroll Tespiti
+    function setupScrollAndVideoObserver() {
+      const videos = document.querySelectorAll('.reel video');
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-          const video = entry.target.querySelector('video');
-          if (entry.isIntersecting) video.play().catch(e => console.log(e));
-          else { video.pause(); video.currentTime = 0; }
+          const video = entry.target;
+          if (entry.isIntersecting) {
+            video.muted = isGlobalMuted;
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
         });
-      }, { root: container, threshold: 0.6 });
+      }, { threshold: 0.6 });
 
-      document.querySelectorAll('.reel-card').forEach(card => observer.observe(card));
+      videos.forEach((video, idx) => {
+        observer.observe(video);
+      });
     }
 
-    window.addEventListener('keydown', (e) => {
-      if (document.activeElement.tagName === 'INPUT') return;
-      const reelHeight = window.innerHeight;
-      if (e.key === 'ArrowDown') container.scrollBy({ top: reelHeight, behavior: 'smooth' });
-      else if (e.key === 'ArrowUp') container.scrollBy({ top: -reelHeight, behavior: 'smooth' });
+    // Tıklayınca Durdur / Başlat
+    function togglePlay(video) {
+      if (video.paused) {
+        video.play();
+      } else {
+        video.pause();
+      }
+    }
+
+    // Global Ses Aç / Kapat
+    function toggleGlobalSound() {
+      isGlobalMuted = !isGlobalMuted;
+      const btn = document.getElementById('soundToggleBtn');
+      btn.innerText = isGlobalMuted ? "🔇" : "🔊";
+
+      const videos = document.querySelectorAll('.reel video');
+      videos.forEach(video => {
+        video.muted = isGlobalMuted;
+      });
+    }
+
+    // PC / Klavye Kontrolleri (Yukarı/Aşağı Ok ve Space)
+    document.addEventListener('keydown', (e) => {
+      const container = document.getElementById('reelsContainer');
+      const reelHeight = container.clientHeight;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        container.scrollBy({ top: reelHeight, behavior: 'smooth' });
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        container.scrollBy({ top: -reelHeight, behavior: 'smooth' });
+      } else if (e.key === " ") {
+        e.preventDefault();
+        // Şu an görünürdeki videoyu bul ve oynat/durdur
+        const videos = document.querySelectorAll('.reel video');
+        videos.forEach(video => {
+          const rect = video.getBoundingClientRect();
+          if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
+            togglePlay(video);
+          }
+        });
+      } else if (e.key === "m" || e.key === "M") {
+        toggleGlobalSound();
+      }
     });
+
+    // Beğeni Butonu
+    async function toggleLike(reelId, btn) {
+      const reelRef = db.collection("reels").doc(reelId);
+      const countSpan = btn.querySelector('.like-count');
+      let currentLikes = parseInt(countSpan.innerText) || 0;
+
+      if (btn.classList.contains('liked')) {
+        btn.classList.remove('liked');
+        countSpan.innerText = Math.max(0, currentLikes - 1);
+        await reelRef.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) });
+      } else {
+        btn.classList.add('liked');
+        countSpan.innerText = currentLikes + 1;
+        await reelRef.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) });
+      }
+    }
+
+    loadReels();
   </script>
 </body>
 </html>

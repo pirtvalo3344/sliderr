@@ -6,25 +6,24 @@
   <title>Sliderr - Profil</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #000; color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 70px; }
-    
-    .profile-header { text-align: center; padding: 30px 20px 20px; width: 100%; max-width: 420px; border-bottom: 1px solid #222; }
-    .profile-avatar { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #ff007f; margin-bottom: 12px; object-fit: cover; }
-    .profile-name { font-size: 20px; font-weight: bold; }
-    .profile-username { font-size: 14px; color: #888; margin-top: 4px; }
-    .logout-btn { margin-top: 15px; background: #222; color: #ff4757; border: 1px solid #333; padding: 6px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+    body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding-bottom: 70px; }
 
-    .video-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: 100%; max-width: 420px; margin-top: 10px; }
-    .grid-item { position: relative; width: 100%; aspect-ratio: 9/16; background: #111; overflow: hidden; cursor: pointer; }
-    .grid-item video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .profile-header { display: flex; flex-direction: column; align-items: center; padding: 30px 20px; border-bottom: 1px solid #222; }
+    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #ff007f; margin-bottom: 12px; }
+    .profile-username { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+    .profile-email { font-size: 13px; color: #777; margin-bottom: 16px; }
 
-    .bottom-nav {
-      position: fixed; bottom: 0; width: 100%; max-width: 420px; height: 60px;
-      background: rgba(0, 0, 0, 0.9); border-top: 1px solid #222;
-      display: flex; justify-content: space-around; align-items: center; z-index: 99;
-    }
-    .nav-item { color: #888; text-decoration: none; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .nav-item.active { color: white; font-weight: bold; }
+    .logout-btn { background: #222; color: #ff4757; border: 1px solid #333; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 13px; }
+
+    .grid-title { padding: 15px 20px 10px; font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+    .video-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .grid-item { position: relative; width: 100%; aspect-ratio: 9/16; background: #111; overflow: hidden; }
+    .grid-item video { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Alt Navigasyon Barı */
+    .navbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: rgba(0, 0, 0, 0.95); border-top: 1px solid #222; display: flex; justify-space: around; align-items: center; z-index: 100; }
+    .nav-item { color: #888; text-decoration: none; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .nav-item.active { color: #ff007f; font-weight: bold; }
     .nav-icon { font-size: 20px; }
   </style>
 
@@ -36,74 +35,59 @@
 <body>
 
   <div class="profile-header">
-    <img id="userAvatar" class="profile-avatar" src="" alt="Avatar">
-    <div id="userName" class="profile-name"></div>
-    <div id="userHandle" class="profile-username"></div>
-    <button id="logoutBtn" class="logout-btn" onclick="logout()">Çıkış Yap</button>
+    <img id="userAvatar" class="profile-avatar" src="">
+    <div id="userUsername" class="profile-username">@yükleniyor</div>
+    <div id="userEmail" class="profile-email"></div>
+    <button class="logout-btn" onclick="logout()">Çıkış Yap</button>
   </div>
 
-  <div class="video-grid" id="userVideos"></div>
+  <div class="grid-title">Yüklenen Videolar</div>
+  <div class="video-grid" id="userVideosGrid"></div>
 
-  <nav class="bottom-nav">
-    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span>Akış</a>
-    <a href="upload.html" class="nav-item"><span class="nav-icon">➕</span>Yükle</a>
-    <a href="profile.html" class="nav-item active"><span class="nav-icon">👤</span>Profil</a>
+  <!-- Alt Navigasyon Barı -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span>Akış</span></a>
+    <a href="search.html" class="nav-item"><span class="nav-icon">🔍</span><span>Keşfet</span></a>
+    <a href="upload.html" class="nav-item"><span class="nav-icon">➕</span><span>Yükle</span></a>
+    <a href="profile.html" class="nav-item active"><span class="nav-icon">👤</span><span>Profil</span></a>
   </nav>
 
   <script>
     const currentUser = JSON.parse(localStorage.getItem('sliderr_user'));
-    if (!currentUser) window.location.href = "auth.html";
 
-    // URL'den hangi kullanıcının profili istendiğini kontrol et
-    const urlParams = new URLSearchParams(window.location.search);
-    const targetUsername = urlParams.get('u') || currentUser.username;
-
-    // Eğer kendi profilinde değilse Çıkış Yap butonunu gizle
-    if (targetUsername !== currentUser.username) {
-      document.getElementById('logoutBtn').style.display = 'none';
+    if (!currentUser) {
+      window.location.href = "auth.html";
+    } else {
+      document.getElementById('userAvatar').src = currentUser.avatar;
+      document.getElementById('userUsername').innerText = currentUser.username;
+      document.getElementById('userEmail').innerText = currentUser.email || '';
+      loadUserVideos();
     }
 
-    // Profil sahibinin videolarını Firestore'dan sorgula
-    db.collection("reels").where("username", "==", targetUsername).get().then((querySnapshot) => {
-      const grid = document.getElementById('userVideos');
+    async function loadUserVideos() {
+      const grid = document.getElementById('userVideosGrid');
+      const snapshot = await db.collection("reels").where("authorUid", "==", currentUser.uid).get();
 
-      if (querySnapshot.empty) {
-        document.getElementById('userName').innerText = targetUsername;
-        document.getElementById('userHandle').innerText = targetUsername;
-        document.getElementById('userAvatar').src = 'https://api.dicebear.com/7.x/bottts/svg?seed=' + targetUsername;
-        grid.innerHTML = '<div style="grid-column: span 3; text-align:center; padding: 40px; color:#666;">Henüz video yok.</div>';
+      grid.innerHTML = "";
+      if (snapshot.empty) {
+        grid.innerHTML = "<div style='grid-column: 1/-1; padding: 40px; text-align: center; color: #555;'>Henüz yüklenmiş bir videon yok.</div>";
         return;
       }
 
-      let profileSet = false;
-
-      querySnapshot.forEach((doc) => {
-        const item = doc.data();
-
-        // Profil başlık bilgilerini ilk bulunan videodan çek
-        if (!profileSet) {
-          document.getElementById('userAvatar').src = item.avatar || ('https://api.dicebear.com/7.x/bottts/svg?seed=' + targetUsername);
-          document.getElementById('userName').innerText = item.username || targetUsername;
-          document.getElementById('userHandle').innerText = item.username || targetUsername;
-          profileSet = true;
-        }
-
-        const div = document.createElement('div');
-        div.className = 'grid-item';
-        div.innerHTML = `<video src="${item.url}#t=0.1" preload="metadata"></video>`;
-        
-        // Videoya tıklayınca Akış'ta o videoya yönlendir
-        div.addEventListener('click', () => {
-          window.location.href = `index.html?video=${doc.id}`;
-        });
-
-        grid.appendChild(div);
+      snapshot.forEach(doc => {
+        const reel = doc.data();
+        const item = document.createElement('div');
+        item.className = 'grid-item';
+        item.innerHTML = `<video src="${reel.videoUrl}" muted preload="metadata"></video>`;
+        grid.appendChild(item);
       });
-    });
+    }
 
     function logout() {
-      localStorage.removeItem('sliderr_user');
-      window.location.href = "auth.html";
+      auth.signOut().then(() => {
+        localStorage.removeItem('sliderr_user');
+        window.location.href = "auth.html";
+      });
     }
   </script>
 </body>
