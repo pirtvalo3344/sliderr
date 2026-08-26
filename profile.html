@@ -18,109 +18,45 @@
       position: relative;
     }
 
-    .avatar-wrapper {
-      position: relative;
-      margin-bottom: 12px;
-    }
+    .avatar-wrapper { position: relative; margin-bottom: 12px; }
+    .profile-avatar { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #ff007f; object-fit: cover; }
+    .profile-username { font-size: 18px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
 
-    .profile-avatar {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      border: 3px solid #ff007f;
-      object-fit: cover;
-    }
-
-    .profile-username {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
-
-    .stats-container {
-      display: flex;
-      gap: 30px;
-      margin-bottom: 18px;
-    }
-
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
+    .stats-container { display: flex; gap: 30px; margin-bottom: 18px; }
+    .stat-item { display: flex; flex-direction: column; align-items: center; }
     .stat-value { font-weight: bold; font-size: 16px; }
     .stat-label { font-size: 12px; color: #888; }
 
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-      width: 100%;
-      max-width: 300px;
-    }
-
+    .action-buttons { display: flex; gap: 10px; width: 100%; max-width: 300px; }
     .btn {
-      flex: 1;
-      padding: 8px 0;
-      border-radius: 8px;
-      font-weight: bold;
-      font-size: 14px;
-      cursor: pointer;
-      border: none;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 5px;
+      flex: 1; padding: 8px 0; border-radius: 8px; font-weight: bold; font-size: 14px;
+      cursor: pointer; border: none; display: flex; justify-content: center; align-items: center; gap: 5px;
     }
-
     .btn-primary { background: #ff007f; color: white; }
     .btn-secondary { background: #222; color: white; border: 1px solid #333; }
     .btn-outline { background: transparent; color: white; border: 1px solid #ff007f; }
 
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2px;
-      margin-top: 2px;
+    .private-warning {
+      text-align: center;
+      padding: 40px 20px;
+      color: #888;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
     }
+    .private-warning-icon { font-size: 40px; }
 
-    .grid-item {
-      position: relative;
-      aspect-ratio: 9/16;
-      background: #111;
-      cursor: pointer;
-      overflow: hidden;
-    }
+    .video-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 2px; }
+    .grid-item { position: relative; aspect-ratio: 9/16; background: #111; cursor: pointer; overflow: hidden; }
+    .grid-item video { width: 100%; height: 100%; object-fit: cover; }
 
-    .grid-item video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .logout-btn {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: none;
-      border: none;
-      color: #ff4757;
-      font-size: 13px;
-      cursor: pointer;
-    }
+    .logout-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #ff4757; font-size: 13px; cursor: pointer; }
 
     .navbar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 60px;
-      background: rgba(0, 0, 0, 0.95);
-      border-top: 1px solid #222;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 100;
+      position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+      background: rgba(0, 0, 0, 0.95); border-top: 1px solid #222;
+      display: flex; justify-content: space-around; align-items: center; z-index: 100;
     }
     .nav-item { color: #888; text-decoration: none; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .nav-item.active { color: #ff007f; font-weight: bold; }
@@ -144,21 +80,19 @@
     <h2 id="profileUsername" class="profile-username">Yükleniyor...</h2>
 
     <div class="stats-container">
-      <div class="stat-item">
-        <span id="videoCount" class="stat-value">0</span>
-        <span class="stat-label">Video</span>
-      </div>
-      <div class="stat-item">
-        <span id="followersCount" class="stat-value">0</span>
-        <span class="stat-label">Takipçi</span>
-      </div>
-      <div class="stat-item">
-        <span id="followingCount" class="stat-value">0</span>
-        <span class="stat-label">Takip Edilen</span>
-      </div>
+      <div class="stat-item"><span id="videoCount" class="stat-value">0</span><span class="stat-label">Video</span></div>
+      <div class="stat-item"><span id="followersCount" class="stat-value">0</span><span class="stat-label">Takipçi</span></div>
+      <div class="stat-item"><span id="followingCount" class="stat-value">0</span><span class="stat-label">Takip Edilen</span></div>
     </div>
 
     <div class="action-buttons" id="actionButtons"></div>
+  </div>
+
+  <!-- Gizli Hesap Uyarısı -->
+  <div class="private-warning" id="privateWarning">
+    <span class="private-warning-icon">🔒</span>
+    <h3 style="color: #fff;">Bu Hesap Gizli</h3>
+    <p>Sliderable içeriklerini ve videolarını görmek için karşılıklı takipleşmelisiniz.</p>
   </div>
 
   <div class="video-grid" id="videoGrid"></div>
@@ -180,58 +114,77 @@
     const isOwnProfile = targetUid === currentUser.uid;
 
     let isFollowing = false;
+    let isMutual = false;
+    let targetUserData = null;
 
     async function loadProfile() {
-      // 1. Kullanıcı bilgilerini çek
       const userDoc = await db.collection("users").doc(targetUid).get();
-      
-      // ÇÖZÜM 1: userDoc.exists parantezsiz (boolean property) olarak kontrol ediliyor!
       if (!userDoc.exists) {
         alert("Kullanıcı bulunamadı!");
         window.location.href = "index.html";
         return;
       }
 
-      const userData = userDoc.data();
-      const defaultAvatar = `https://ui-avatars.com/api/?background=ff007f&color=fff&name=${encodeURIComponent(userData.username || 'User')}`;
+      targetUserData = userDoc.data();
+      const defaultAvatar = `https://ui-avatars.com/api/?background=ff007f&color=fff&name=${encodeURIComponent(targetUserData.username || 'User')}`;
       
-      document.getElementById('profileUsername').innerText = `@${userData.username || 'kullanici'}`;
+      const lockIcon = targetUserData.isPrivate ? ' 🔒' : '';
+      document.getElementById('profileUsername').innerText = `@${targetUserData.username || 'kullanici'}${lockIcon}`;
       
-      // ÇÖZÜM 2: Eski via.placeholder linki veritabanında varsa bile engelleyip ui-avatars'a düşürüyoruz
-      const avatarUrl = (userData.avatar && !userData.avatar.includes('via.placeholder.com')) ? userData.avatar : defaultAvatar;
+      const avatarUrl = (targetUserData.avatar && !targetUserData.avatar.includes('via.placeholder.com')) ? targetUserData.avatar : defaultAvatar;
       document.getElementById('profileAvatar').src = avatarUrl;
 
-      // 2. Takipçi ve Takip Edilen sayılarını çek
+      // Takipçi ve Takip Edilen sayıları
       const followersSnap = await db.collection("users").doc(targetUid).collection("followers").get();
       const followingSnap = await db.collection("users").doc(targetUid).collection("following").get();
-
       document.getElementById('followersCount').innerText = followersSnap.size;
       document.getElementById('followingCount').innerText = followingSnap.size;
 
-      // 3. Butonları Ayarla
+      // Takip ve Karşılıklı Takip durumları
+      if (!isOwnProfile) {
+        const myFollow = await db.collection("users").doc(currentUser.uid).collection("following").doc(targetUid).get();
+        const targetFollow = await db.collection("users").doc(targetUid).collection("following").doc(currentUser.uid).get();
+
+        isFollowing = myFollow.exists;
+        isMutual = myFollow.exists && targetFollow.exists;
+      }
+
+      // Butonları Ayarla
       const actionArea = document.getElementById('actionButtons');
       actionArea.innerHTML = "";
 
       if (isOwnProfile) {
         document.getElementById('logoutBtn').style.display = 'block';
-        actionArea.innerHTML = `<button class="btn btn-secondary" onclick="alert('Profil düzenleme yakında!')">Profili Düzenle</button>`;
+        const isPrivate = targetUserData.isPrivate === true;
+        actionArea.innerHTML = `
+          <button class="btn ${isPrivate ? 'btn-primary' : 'btn-secondary'}" onclick="togglePrivacy()">
+            ${isPrivate ? '🔒 Gizli Hesap' : '🌐 Açık Hesap'}
+          </button>
+        `;
       } else {
-        const followDoc = await db.collection("users").doc(currentUser.uid).collection("following").doc(targetUid).get();
-        // ÇÖZÜM 1: followDoc.exists yine parantezsiz kontrol edildi
-        isFollowing = followDoc.exists;
-
         actionArea.innerHTML = `
           <button class="btn ${isFollowing ? 'btn-secondary' : 'btn-primary'}" id="followBtn" onclick="toggleFollow()">
             ${isFollowing ? 'Takiptesin' : 'Takip Et'}
           </button>
-          <button class="btn btn-outline" onclick="openDM()">
-            💬 Mesaj
-          </button>
+          <button class="btn btn-outline" onclick="openDM()">💬 Mesaj</button>
         `;
       }
 
-      // 4. Kullanıcının videolarını çek
-      loadUserVideos();
+      // GİZLİLİK KONTROLÜ: Gizliyse VE (Kendi profilimiz değilse VE Karşılıklı takip yoksa) videoları engelle!
+      if (targetUserData.isPrivate && !isOwnProfile && !isMutual) {
+        document.getElementById('privateWarning').style.display = 'flex';
+        document.getElementById('videoGrid').style.display = 'none';
+      } else {
+        document.getElementById('privateWarning').style.display = 'none';
+        document.getElementById('videoGrid').style.display = 'grid';
+        loadUserVideos();
+      }
+    }
+
+    async function togglePrivacy() {
+      const newStatus = !targetUserData.isPrivate;
+      await db.collection("users").doc(currentUser.uid).update({ isPrivate: newStatus });
+      location.reload();
     }
 
     async function loadUserVideos() {
@@ -254,23 +207,15 @@
         const item = document.createElement('div');
         item.className = 'grid-item';
         item.onclick = () => window.location.href = `index.html?video=${doc.id}`;
-        item.innerHTML = `
-          <video src="${reel.videoUrl}#t=0.1" preload="metadata" muted></video>
-        `;
+        item.innerHTML = `<video src="${reel.videoUrl}#t=0.1" preload="metadata" muted></video>`;
         grid.appendChild(item);
       });
     }
 
     async function toggleFollow() {
-      const followBtn = document.getElementById('followBtn');
-      
       if (isFollowing) {
         await db.collection("users").doc(currentUser.uid).collection("following").doc(targetUid).delete();
         await db.collection("users").doc(targetUid).collection("followers").doc(currentUser.uid).delete();
-        
-        isFollowing = false;
-        followBtn.innerText = "Takip Et";
-        followBtn.className = "btn btn-primary";
       } else {
         await db.collection("users").doc(currentUser.uid).collection("following").doc(targetUid).set({
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -278,24 +223,12 @@
         await db.collection("users").doc(targetUid).collection("followers").doc(currentUser.uid).set({
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-
-        isFollowing = true;
-        followBtn.innerText = "Takiptesin";
-        followBtn.className = "btn btn-secondary";
       }
-
-      const followersSnap = await db.collection("users").doc(targetUid).collection("followers").get();
-      document.getElementById('followersCount').innerText = followersSnap.size;
+      location.reload();
     }
 
-    function openDM() {
-      window.location.href = `chat.html?uid=${targetUid}`;
-    }
-
-    function logout() {
-      localStorage.removeItem('sliderr_user');
-      window.location.href = "auth.html";
-    }
+    function openDM() { window.location.href = `chat.html?uid=${targetUid}`; }
+    function logout() { localStorage.removeItem('sliderr_user'); window.location.href = "auth.html"; }
 
     loadProfile();
   </script>

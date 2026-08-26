@@ -3,23 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sliderr - KeÅŸfet</title>
+  <title>Sliderr - Keşfet & Arama</title>
+  <link rel="stylesheet" href="toast.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding-bottom: 70px; }
 
-    .search-header { position: sticky; top: 0; background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; border-bottom: 1px solid #222; z-index: 10; }
-    .search-input-wrapper { display: flex; align-items: center; background: #111; border: 1px solid #333; border-radius: 12px; padding: 0 12px; }
-    .search-input-wrapper:focus-within { border-color: #ff007f; }
-    .search-icon { font-size: 16px; margin-right: 8px; color: #888; }
-    .search-input { width: 100%; background: none; border: none; color: white; padding: 12px 0; font-size: 14px; outline: none; }
+    .search-header {
+      padding: 15px;
+      position: sticky;
+      top: 0;
+      background: #000;
+      z-index: 10;
+      border-bottom: 1px solid #222;
+    }
 
-    .grid-title { padding: 15px 20px 10px; font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-    .video-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
-    .grid-item { position: relative; width: 100%; aspect-ratio: 9/16; background: #111; overflow: hidden; cursor: pointer; }
-    .grid-item video { width: 100%; height: 100%; object-fit: cover; }
+    .search-box {
+      width: 100%;
+      background: #121212;
+      border: 1px solid #333;
+      border-radius: 20px;
+      padding: 10px 15px;
+      color: white;
+      font-size: 15px;
+      outline: none;
+    }
+    .search-box:focus { border-color: #ff007f; }
 
-    .navbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: rgba(0, 0, 0, 0.95); border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 100; }
+    .results-list {
+      padding: 10px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      background: #111;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .user-card:hover { background: #1a1a1a; }
+
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .user-avatar { width: 45px; height: 45px; border-radius: 50%; border: 1.5px solid #ff007f; object-fit: cover; }
+    .user-name-container { display: flex; flex-direction: column; }
+    .username-text { font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 5px; }
+    .private-badge { font-size: 12px; color: #aaa; }
+
+    .navbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(0, 0, 0, 0.95);
+      border-top: 1px solid #222;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+    }
     .nav-item { color: #888; text-decoration: none; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .nav-item.active { color: #ff007f; font-weight: bold; }
     .nav-icon { font-size: 20px; }
@@ -29,79 +77,80 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <link rel="stylesheet" href="toast.css">
 </head>
 <body>
 
   <div class="search-header">
-    <div class="search-input-wrapper">
-      <span class="search-icon">ğŸ”</span>
-      <input type="text" class="search-input" id="searchInput" placeholder="AÃ§Ä±klama veya kullanÄ±cÄ± ara..." oninput="handleSearch()">
-    </div>
+    <input type="text" id="searchInput" class="search-box" placeholder="Kullanıcı adı ara..." oninput="searchUsers()">
   </div>
 
-  <div class="grid-title" id="gridTitle">TÃ¼m Videolar</div>
-  <div class="video-grid" id="searchGrid"></div>
+  <div class="results-list" id="resultsList">
+    <div style="text-align: center; color: #666; margin-top: 30px;">Aramak istediğiniz kullanıcı adını yazın.</div>
+  </div>
 
   <nav class="navbar">
-    <a href="index.html" class="nav-item"><span class="nav-icon">ğŸ </span><span>AkÄ±ÅŸ</span></a>
-    <a href="search.html" class="nav-item active"><span class="nav-icon">ğŸ”</span><span>KeÅŸfet</span></a>
-    <a href="upload.html" class="nav-item"><span class="nav-icon">â•</span><span>YÃ¼kle</span></a>
-    <a href="profile.html" class="nav-item"><span class="nav-icon">ğŸ‘¤</span><span>Profil</span></a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">??</span><span>Akış</span></a>
+    <a href="search.html" class="nav-item active"><span class="nav-icon">??</span><span>Keşfet</span></a>
+    <a href="upload.html" class="nav-item"><span class="nav-icon">?</span><span>Yükle</span></a>
+    <a href="profile.html" class="nav-item"><span class="nav-icon">??</span><span>Profil</span></a>
   </nav>
 
+  <script src="notification-listener.js"></script>
   <script>
-    const currentUser = JSON.parse(localStorage.getItem('sliderr_user'));
+    let currentUser = JSON.parse(localStorage.getItem('sliderr_user'));
     if (!currentUser) window.location.href = "auth.html";
 
-    let allReels = [];
-
-    async function loadAllReels() {
-      const snapshot = await db.collection("reels").orderBy("createdAt", "desc").get();
-      allReels = [];
-      snapshot.forEach(doc => allReels.push({ id: doc.id, ...doc.data() }));
-      renderGrid(allReels);
-    }
-
-    function renderGrid(reels) {
-      const grid = document.getElementById('searchGrid');
-      grid.innerHTML = "";
-
-      if (reels.length === 0) {
-        grid.innerHTML = "<div style='grid-column: 1/-1; padding: 40px; text-align: center; color: #555;'>SonuÃ§ bulunamadÄ±.</div>";
-        return;
-      }
-
-      reels.forEach(reel => {
-        const item = document.createElement('div');
-        item.className = 'grid-item';
-        // TÄ±klanÄ±nca o videonun ID'si ile akÄ±ÅŸa yÃ¶nlendir
-        item.onclick = () => window.location.href = `index.html?video=${reel.id}`;
-        item.innerHTML = `<video src="${reel.videoUrl}" muted preload="metadata"></video>`;
-        grid.appendChild(item);
-      });
-    }
-
-    function handleSearch() {
-      const query = document.getElementById('searchInput').value.toLowerCase().trim();
-      const title = document.getElementById('gridTitle');
+    async function searchUsers() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const resultsList = document.getElementById('resultsList');
 
       if (!query) {
-        title.innerText = "TÃ¼m Videolar";
-        renderGrid(allReels);
+        resultsList.innerHTML = `<div style="text-align: center; color: #666; margin-top: 30px;">Aramak istediğiniz kullanıcı adını yazın.</div>`;
         return;
       }
 
-      title.innerText = "Arama SonuÃ§larÄ±";
-      const filtered = allReels.filter(reel => 
-        (reel.caption && reel.caption.toLowerCase().includes(query)) ||
-        (reel.authorName && reel.authorName.toLowerCase().includes(query))
-      );
-      renderGrid(filtered);
-    }
+      // Firestore'da kullanıcı adı arama
+      const snapshot = await db.collection("users")
+        .where("username", ">=", query)
+        .where("username", "<=", query + '\uf8ff')
+        .limit(10)
+        .get();
 
-    loadAllReels();
+      resultsList.innerHTML = "";
+
+      if (snapshot.empty) {
+        resultsList.innerHTML = `<div style="text-align: center; color: #666; margin-top: 30px;">Kullanıcı bulunamadı.</div>`;
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const user = doc.data();
+        const uid = doc.id;
+        if (uid === currentUser.uid) return; // Kendimizi listede gösterme
+
+        const defaultAvatar = `https://ui-avatars.com/api/?background=ff007f&color=fff&name=${encodeURIComponent(user.username || 'U')}`;
+        const avatarUrl = (user.avatar && !user.avatar.includes('via.placeholder.com')) ? user.avatar : defaultAvatar;
+        const isPrivate = user.isPrivate === true;
+
+        const card = document.createElement('div');
+        card.className = 'user-card';
+        card.onclick = () => window.location.href = `profile.html?uid=${uid}`;
+        card.innerHTML = `
+          <div class="user-info">
+            <img src="${avatarUrl}" class="user-avatar">
+            <div class="user-name-container">
+              <span class="username-text">
+                @${user.username}
+                ${isPrivate ? '<span title="Gizli Hesap">??</span>' : ''}
+              </span>
+              <span class="private-badge">${isPrivate ? 'Gizli Hesap' : 'Herkese Açık'}</span>
+            </div>
+          </div>
+          <span style="color: #666;">?</span>
+        `;
+        resultsList.appendChild(card);
+      });
+    }
   </script>
-  <script src="notification-listener.js"></script>
 </body>
 </html>
