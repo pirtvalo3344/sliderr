@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sliderr - Profil</title>
+  <link rel="stylesheet" href="toast.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding-bottom: 70px; }
@@ -130,7 +131,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <link rel="stylesheet" href="toast.css">
 </head>
 <body>
 
@@ -138,7 +138,7 @@
     <button class="logout-btn" id="logoutBtn" onclick="logout()" style="display: none;">Çıkış Yap</button>
     
     <div class="avatar-wrapper">
-      <img id="profileAvatar" src="https://via.placeholder.com/150" class="profile-avatar">
+      <img id="profileAvatar" src="https://ui-avatars.com/api/?background=ff007f&color=fff&name=User" class="profile-avatar">
     </div>
 
     <h2 id="profileUsername" class="profile-username">Yükleniyor...</h2>
@@ -170,6 +170,7 @@
     <a href="profile.html" class="nav-item active"><span class="nav-icon">👤</span><span>Profil</span></a>
   </nav>
 
+  <script src="notification-listener.js"></script>
   <script>
     let currentUser = JSON.parse(localStorage.getItem('sliderr_user'));
     if (!currentUser) window.location.href = "auth.html";
@@ -183,15 +184,22 @@
     async function loadProfile() {
       // 1. Kullanıcı bilgilerini çek
       const userDoc = await db.collection("users").doc(targetUid).get();
-      if (!userDoc.exists()) {
+      
+      // ÇÖZÜM 1: userDoc.exists parantezsiz (boolean property) olarak kontrol ediliyor!
+      if (!userDoc.exists) {
         alert("Kullanıcı bulunamadı!");
         window.location.href = "index.html";
         return;
       }
 
       const userData = userDoc.data();
-      document.getElementById('profileUsername').innerText = `@${userData.username}`;
-      document.getElementById('profileAvatar').src = userData.avatar || 'https://via.placeholder.com/150';
+      const defaultAvatar = `https://ui-avatars.com/api/?background=ff007f&color=fff&name=${encodeURIComponent(userData.username || 'User')}`;
+      
+      document.getElementById('profileUsername').innerText = `@${userData.username || 'kullanici'}`;
+      
+      // ÇÖZÜM 2: Eski via.placeholder linki veritabanında varsa bile engelleyip ui-avatars'a düşürüyoruz
+      const avatarUrl = (userData.avatar && !userData.avatar.includes('via.placeholder.com')) ? userData.avatar : defaultAvatar;
+      document.getElementById('profileAvatar').src = avatarUrl;
 
       // 2. Takipçi ve Takip Edilen sayılarını çek
       const followersSnap = await db.collection("users").doc(targetUid).collection("followers").get();
@@ -208,9 +216,9 @@
         document.getElementById('logoutBtn').style.display = 'block';
         actionArea.innerHTML = `<button class="btn btn-secondary" onclick="alert('Profil düzenleme yakında!')">Profili Düzenle</button>`;
       } else {
-        // Kendi profilimiz değilse Takip durumunu kontrol et
         const followDoc = await db.collection("users").doc(currentUser.uid).collection("following").doc(targetUid).get();
-        isFollowing = followDoc.exists();
+        // ÇÖZÜM 1: followDoc.exists yine parantezsiz kontrol edildi
+        isFollowing = followDoc.exists;
 
         actionArea.innerHTML = `
           <button class="btn ${isFollowing ? 'btn-secondary' : 'btn-primary'}" id="followBtn" onclick="toggleFollow()">
@@ -257,7 +265,6 @@
       const followBtn = document.getElementById('followBtn');
       
       if (isFollowing) {
-        // Takipten Çık
         await db.collection("users").doc(currentUser.uid).collection("following").doc(targetUid).delete();
         await db.collection("users").doc(targetUid).collection("followers").doc(currentUser.uid).delete();
         
@@ -265,7 +272,6 @@
         followBtn.innerText = "Takip Et";
         followBtn.className = "btn btn-primary";
       } else {
-        // Takip Et
         await db.collection("users").doc(currentUser.uid).collection("following").doc(targetUid).set({
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -278,7 +284,6 @@
         followBtn.className = "btn btn-secondary";
       }
 
-      // Takipçi sayılarını canlı güncelle
       const followersSnap = await db.collection("users").doc(targetUid).collection("followers").get();
       document.getElementById('followersCount').innerText = followersSnap.size;
     }
@@ -294,6 +299,5 @@
 
     loadProfile();
   </script>
-  <script src="notification-listener.js"></script>
 </body>
 </html>
