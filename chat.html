@@ -41,6 +41,29 @@
     .header-username {
       font-weight: bold;
       font-size: 15px;
+      flex: 1; /* Kullanıcı adının kalan alanı kaplamasını sağlar */
+    }
+
+    /* Görüntülü Arama Buton Stili */
+    .call-btn {
+      background: #111;
+      border: 1px solid #ff007f;
+      color: #ff007f;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.2s;
+    }
+
+    .call-btn:hover {
+      background: #ff007f;
+      color: #fff;
     }
 
     .messages-container {
@@ -125,6 +148,9 @@
     <button class="back-btn" onclick="history.back()">←</button>
     <img id="chatAvatar" src="https://ui-avatars.com/api/?background=ff007f&color=fff&name=User" class="header-avatar">
     <span id="chatUsername" class="header-username">Yükleniyor...</span>
+    
+    <!-- 📌 Eklenen Görüntülü Arama Butonu -->
+    <button id="startCallBtn" class="call-btn">📹 Ara</button>
   </div>
 
   <div class="messages-container" id="messagesContainer"></div>
@@ -147,15 +173,19 @@
       window.location.href = "index.html";
     }
 
-    // İki kullanıcı id'sinden benzersiz bir sohbet oda ID'si üretme (alfabetik sıralama ile)
+    // İki kullanıcı id'sinden benzersiz bir sohbet oda ID'si üretme
     const chatId = [currentUser.uid, targetUid].sort().join("_");
     let targetUserData = null;
+
+    // Arama Butonuna Tıklama Olayı (Görüntülü görüşme odasına yönlendirir)
+    document.getElementById('startCallBtn').addEventListener('click', () => {
+      window.location.href = `call.html?room=${chatId}`;
+    });
 
     async function initChat() {
       // 1. Hedef Kullanıcı Bilgilerini Çek
       const targetDoc = await db.collection("users").doc(targetUid).get();
       
-      // HATA DÜZELTMESİ: targetDoc.exists parantezsiz kontrol edildi
       if (!targetDoc.exists) {
         alert("Kullanıcı bulunamadı!");
         window.location.href = "index.html";
@@ -167,11 +197,10 @@
       
       document.getElementById('chatUsername').innerText = `@${targetUserData.username || 'kullanici'}`;
       
-      // Kapanan via.placeholder kontrolü ve ui-avatars düşürmesi
       const avatarUrl = (targetUserData.avatar && !targetUserData.avatar.includes('via.placeholder.com')) ? targetUserData.avatar : defaultAvatar;
       document.getElementById('chatAvatar').src = avatarUrl;
 
-      // 2. Canlı Mesaj Dinleyicisi (Real-time Listener)
+      // 2. Canlı Mesaj Dinleyicisi
       db.collection("chats")
         .doc(chatId)
         .collection("messages")
@@ -188,7 +217,6 @@
             container.appendChild(msgEl);
           });
 
-          // Otomatik en aşağı kaydır
           container.scrollTop = container.scrollHeight;
         });
     }
@@ -210,7 +238,7 @@
       // 1. Mesajı veritabanına ekle
       await db.collection("chats").doc(chatId).collection("messages").add(msgData);
 
-      // 2. Bildirim dokümanı oluştur (Toast/Notification Listener için)
+      // 2. Bildirim dokümanı oluştur
       await db.collection("notifications").add({
         targetUid: targetUid,
         senderUid: currentUser.uid,
