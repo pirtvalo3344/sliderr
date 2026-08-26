@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sliderr - Ke�fet & Arama</title>
+  <title>Sliderr - Keşfet & Arama</title>
   <link rel="stylesheet" href="toast.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -16,6 +16,9 @@
       background: #000;
       z-index: 10;
       border-bottom: 1px solid #222;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
     .search-box {
@@ -23,54 +26,98 @@
       background: #121212;
       border: 1px solid #333;
       border-radius: 20px;
-      padding: 10px 15px;
+      padding: 12px 16px;
       color: white;
       font-size: 15px;
       outline: none;
     }
     .search-box:focus { border-color: #ff007f; }
 
-    .results-list {
-      padding: 10px 15px;
+    /* Arama Sekmeleri (Hesaplar / Videolar) */
+    .tabs {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
+      border-bottom: 1px solid #222;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      background: none;
+      border: none;
+      color: #888;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active {
+      color: #ff007f;
+      border-bottom-color: #ff007f;
     }
 
+    .results-container {
+      padding: 15px;
+    }
+
+    /* Kullanıcı Kartları */
+    .user-list { display: flex; flex-direction: column; gap: 10px; }
     .user-card {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px;
+      padding: 10px 12px;
       background: #111;
       border-radius: 12px;
       cursor: pointer;
-      transition: background 0.2s;
     }
     .user-card:hover { background: #1a1a1a; }
-
     .user-info { display: flex; align-items: center; gap: 12px; }
     .user-avatar { width: 45px; height: 45px; border-radius: 50%; border: 1.5px solid #ff007f; object-fit: cover; }
-    .user-name-container { display: flex; flex-direction: column; }
     .username-text { font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 5px; }
     .private-badge { font-size: 12px; color: #aaa; }
 
-    .navbar {
-      position: fixed;
+    /* Video Izgarası (Video Arama Sonuçları) */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+    .video-card {
+      position: relative;
+      aspect-ratio: 9/16;
+      background: #111;
+      border-radius: 6px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .video-card video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .video-caption-overlay {
+      position: absolute;
       bottom: 0;
       left: 0;
-      width: 100%;
-      height: 60px;
-      background: rgba(0, 0, 0, 0.95);
-      border-top: 1px solid #222;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 100;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      padding: 6px;
+      font-size: 11px;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .navbar {
+      position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+      background: rgba(0, 0, 0, 0.95); border-top: 1px solid #222;
+      display: flex; justify-content: space-around; align-items: center; z-index: 100;
     }
     .nav-item { color: #888; text-decoration: none; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .nav-item.active { color: #ff007f; font-weight: bold; }
     .nav-icon { font-size: 20px; }
+
+    .empty-msg { text-align: center; color: #666; margin-top: 40px; font-size: 14px; }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -81,18 +128,25 @@
 <body>
 
   <div class="search-header">
-    <input type="text" id="searchInput" class="search-box" placeholder="Kullan�c� ad� ara..." oninput="searchUsers()">
+    <input type="text" id="searchInput" class="search-box" placeholder="Hesap veya video açıklaması ara..." oninput="handleSearch()">
+    
+    <div class="tabs">
+      <button class="tab-btn active" id="tabUsers" onclick="switchTab('users')">👤 Hesaplar</button>
+      <button class="tab-btn" id="tabVideos" onclick="switchTab('videos')">🎬 Videolar</button>
+    </div>
   </div>
 
-  <div class="results-list" id="resultsList">
-    <div style="text-align: center; color: #666; margin-top: 30px;">Aramak istedi�iniz kullan�c� ad�n� yaz�n.</div>
+  <div class="results-container">
+    <div id="usersResult" class="user-list"></div>
+    <div id="videosResult" class="video-grid" style="display: none;"></div>
+    <div id="emptyMsg" class="empty-msg">Aramak istediğiniz terimi yazın.</div>
   </div>
 
   <nav class="navbar">
-    <a href="index.html" class="nav-item"><span class="nav-icon">??</span><span>Ak��</span></a>
-    <a href="search.html" class="nav-item active"><span class="nav-icon">??</span><span>Ke�fet</span></a>
-    <a href="upload.html" class="nav-item"><span class="nav-icon">?</span><span>Y�kle</span></a>
-    <a href="profile.html" class="nav-item"><span class="nav-icon">??</span><span>Profil</span></a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span>Akış</span></a>
+    <a href="search.html" class="nav-item active"><span class="nav-icon">🔍</span><span>Keşfet</span></a>
+    <a href="upload.html" class="nav-item"><span class="nav-icon">➕</span><span>Yükle</span></a>
+    <a href="profile.html" class="nav-item"><span class="nav-icon">👤</span><span>Profil</span></a>
   </nav>
 
   <script src="notification-listener.js"></script>
@@ -100,56 +154,135 @@
     let currentUser = JSON.parse(localStorage.getItem('sliderr_user'));
     if (!currentUser) window.location.href = "auth.html";
 
-    async function searchUsers() {
-      const query = document.getElementById('searchInput').value.trim().toLowerCase();
-      const resultsList = document.getElementById('resultsList');
+    let activeTab = 'users'; // 'users' veya 'videos'
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById('tabUsers').classList.toggle('active', tab === 'users');
+      document.getElementById('tabVideos').classList.toggle('active', tab === 'videos');
+
+      document.getElementById('usersResult').style.display = tab === 'users' ? 'flex' : 'none';
+      document.getElementById('videosResult').style.display = tab === 'videos' ? 'grid' : 'none';
+
+      handleSearch();
+    }
+
+    async function handleSearch() {
+      // Çift @@ veya kullanıcı arama kutusuna @ yazarsa otomatik temizle
+      let query = document.getElementById('searchInput').value.trim().replace(/^@+/, '').toLowerCase();
+      
+      const usersContainer = document.getElementById('usersResult');
+      const videosContainer = document.getElementById('videosResult');
+      const emptyMsg = document.getElementById('emptyMsg');
+
+      usersContainer.innerHTML = "";
+      videosContainer.innerHTML = "";
 
       if (!query) {
-        resultsList.innerHTML = `<div style="text-align: center; color: #666; margin-top: 30px;">Aramak istedi�iniz kullan�c� ad�n� yaz�n.</div>`;
+        emptyMsg.style.display = 'block';
+        emptyMsg.innerText = "Aramak istediğiniz terimi yazın.";
         return;
       }
 
-      // Firestore'da kullan�c� ad� arama
-      const snapshot = await db.collection("users")
-        .where("username", ">=", query)
-        .where("username", "<=", query + '\uf8ff')
-        .limit(10)
-        .get();
+      emptyMsg.style.display = 'none';
 
-      resultsList.innerHTML = "";
-
-      if (snapshot.empty) {
-        resultsList.innerHTML = `<div style="text-align: center; color: #666; margin-top: 30px;">Kullan�c� bulunamad�.</div>`;
-        return;
+      if (activeTab === 'users') {
+        await searchUsers(query);
+      } else {
+        await searchVideos(query);
       }
+    }
+
+    // 1. HESAP ARAMA SİSTEMİ
+    async function searchUsers(query) {
+      const container = document.getElementById('usersResult');
+      const emptyMsg = document.getElementById('emptyMsg');
+
+      const snapshot = await db.collection("users").get();
+      let matchCount = 0;
 
       snapshot.forEach(doc => {
         const user = doc.data();
         const uid = doc.id;
-        if (uid === currentUser.uid) return; // Kendimizi listede g�sterme
+        
+        if (uid === currentUser.uid) return;
 
-        const defaultAvatar = `https://ui-avatars.com/api/?background=ff007f&color=fff&name=${encodeURIComponent(user.username || 'U')}`;
-        const avatarUrl = (user.avatar && !user.avatar.includes('via.placeholder.com')) ? user.avatar : defaultAvatar;
-        const isPrivate = user.isPrivate === true;
+        const username = (user.username || '').toLowerCase();
+        
+        // Terim kullanıcı adı içinde geçiyor mu kontrol et
+        if (username.includes(query)) {
+          matchCount++;
+          const defaultAvatar = `https://ui-avatars.com/api/?background=ff007f&color=fff&name=${encodeURIComponent(user.username || 'U')}`;
+          const avatarUrl = (user.avatar && !user.avatar.includes('via.placeholder.com')) ? user.avatar : defaultAvatar;
+          const isPrivate = user.isPrivate === true;
 
-        const card = document.createElement('div');
-        card.className = 'user-card';
-        card.onclick = () => window.location.href = `profile.html?uid=${uid}`;
-        card.innerHTML = `
-          <div class="user-info">
-            <img src="${avatarUrl}" class="user-avatar">
-            <div class="user-name-container">
-              <span class="username-text">
-                @${user.username}
-                ${isPrivate ? '<span title="Gizli Hesap">??</span>' : ''}
-              </span>
-              <span class="private-badge">${isPrivate ? 'Gizli Hesap' : 'Herkese A��k'}</span>
+          const card = document.createElement('div');
+          card.className = 'user-card';
+          card.onclick = () => window.location.href = `profile.html?uid=${uid}`;
+          
+          // ÇİFT @@ DÜZELTİLDİ: Tek @ yazımı garanti edildi
+          card.innerHTML = `
+            <div class="user-info">
+              <img src="${avatarUrl}" class="user-avatar">
+              <div>
+                <div class="username-text">
+                  @${user.username}
+                  ${isPrivate ? '<span title="Gizli Hesap">🔒</span>' : ''}
+                </div>
+                <div class="private-badge">${isPrivate ? 'Gizli Hesap' : 'Herkese Açık'}</div>
+              </div>
             </div>
-          </div>
-          <span style="color: #666;">?</span>
-        `;
-        resultsList.appendChild(card);
+            <span style="color: #666;">➔</span>
+          `;
+          container.appendChild(card);
+        }
       });
+
+      if (matchCount === 0) {
+        emptyMsg.style.display = 'block';
+        emptyMsg.innerText = "Kullanıcı bulunamadı.";
+      }
+    }
+
+    // 2. VİDEO (AÇIKLAMA/CAPTION) ARAMA SİSTEMİ
+    async function searchVideos(query) {
+      const container = document.getElementById('videosResult');
+      const emptyMsg = document.getElementById('emptyMsg');
+
+      const snapshot = await db.collection("reels").get();
+      let matchCount = 0;
+
+      for (const doc of snapshot.docs) {
+        const reel = doc.data();
+        const caption = (reel.caption || '').toLowerCase();
+
+        if (caption.includes(query)) {
+          // Gizli hesap videoları arama sonuçlarında kilitli kalsın mı?
+          const authorDoc = await db.collection("users").doc(reel.authorUid).get();
+          if (authorDoc.exists && authorDoc.data().isPrivate) {
+            if (reel.authorUid !== currentUser.uid) {
+              const myFollow = await db.collection("users").doc(currentUser.uid).collection("following").doc(reel.authorUid).get();
+              const targetFollow = await db.collection("users").doc(reel.authorUid).collection("following").doc(currentUser.uid).get();
+              if (!myFollow.exists || !targetFollow.exists) continue; // Karşılıklı takip yoksa gizli video gösterilmez
+            }
+          }
+
+          matchCount++;
+          const videoCard = document.createElement('div');
+          videoCard.className = 'video-card';
+          videoCard.onclick = () => window.location.href = `index.html?video=${doc.id}`;
+          videoCard.innerHTML = `
+            <video src="${reel.videoUrl}#t=0.1" preload="metadata" muted></video>
+            <div class="video-caption-overlay">${reel.caption || ''}</div>
+          `;
+          container.appendChild(videoCard);
+        }
+      }
+
+      if (matchCount === 0) {
+        emptyMsg.style.display = 'block';
+        emptyMsg.innerText = "Eşleşen video bulunamadı.";
+      }
     }
   </script>
 </body>
